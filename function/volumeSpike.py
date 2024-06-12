@@ -34,3 +34,24 @@ def plot_stock_interactive(data, symbol, volume_threshold):
                         template='plotly_dark')
 
         st.plotly_chart(fig)
+
+
+# Fungsi untuk mendapatkan harga saham terbaru dari Yahoo Finance
+def get_last_prices(stock_symbols):
+    last_prices = {}
+    for symbol in stock_symbols:
+        ticker = yf.Ticker(symbol)
+        data = ticker.history(period='1d')
+        if not data.empty:
+            last_prices[symbol] = data['Close'].iloc[-1]
+    return last_prices      
+
+# Fungsi untuk mendapatkan harga saham terbaru dari Yahoo Finance
+def get_last_prices_header(symbols):
+    last_prices = {}
+    for symbol in symbols:
+        ticker = yf.Ticker(symbol)
+        data = ticker.history(period='1d')
+        if not data.empty:
+            last_prices[symbol] = data['Close'].iloc[-1]
+    return last_prices 
