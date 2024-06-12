@@ -106,17 +106,20 @@ elif selected == 'Volume Spike (Data)':
 
     all_data['Threshold'] = volume_threshold
     average_volume_all = all_data.groupby('Nama Saham')['Volume'].transform('mean')
-    all_data['Volume Spike'] = 'none'
-    all_data.loc[(all_data['Volume'] > volume_threshold * average_volume_all) & (all_data['Close'] > all_data['Open']), 'Volume Spike'] = 'spike buy'
-    all_data.loc[(all_data['Volume'] > volume_threshold * average_volume_all) & (all_data['Close'] <= all_data['Open']), 'Volume Spike'] = 'spike sell'
+    all_data['Action Spike'] = 'none'
+    all_data.loc[(all_data['Volume'] > volume_threshold * average_volume_all) & (all_data['Close'] > all_data['Open']), 'Action Spike'] = 'spike buy'
+    all_data.loc[(all_data['Volume'] > volume_threshold * average_volume_all) & (all_data['Close'] <= all_data['Open']), 'Action Spike'] = 'spike sell'
+    
+    # Calculate Lot
+    all_data['Lot'] = all_data['Volume'] // 100
 
-    all_data_sorted = all_data.sort_values(by=['Volume Spike', 'Volume'], ascending=[False, False])
+    all_data_sorted = all_data.sort_values(by=['Action Spike', 'Volume'], ascending=[False, False])
 
     st.write("Sorted Stock Data:")
-    st.dataframe(all_data_sorted[['Nama Saham', 'Open', 'High', 'Low', 'Close', 'Volume', 'Threshold', 'Volume Spike']])
+    st.dataframe(all_data_sorted[['Nama Saham', 'Open', 'High', 'Low', 'Close', 'Volume', 'Lot', 'Threshold', 'Action Spike']])
 
     today_date = pd.to_datetime('today').normalize()
-    result_data = all_data_sorted[all_data_sorted['Volume Spike'].isin(['spike buy', 'spike sell'])].copy()
+    result_data = all_data_sorted[all_data_sorted['Action Spike'].isin(['spike buy', 'spike sell'])].copy()
     result_data['Date'] = result_data.index
     result_data['Price Spike'] = result_data['Close']
     result_data['Close'] = result_data['Close']
@@ -127,8 +130,7 @@ elif selected == 'Volume Spike (Data)':
     result_data['Selisih Hari'] = (today_date - result_data['Date']).dt.days
 
     st.write("Filtered Spike Data:")
-    st.dataframe(result_data[['Nama Saham', 'Threshold', 'Volume', 'Volume Spike', 'Price Spike', 'Close Today', 'Selisih', 'Presentasi', 'Selisih Hari']])
-    # st.dataframe(result_data[['Nama Saham', 'Threshold', 'Volume', 'Volume Spike', 'Price Spike', 'Close', 'Close Today', 'Selisih', 'Presentasi', 'Selisih Hari']])
+    st.dataframe(result_data[['Nama Saham', 'Threshold', 'Volume', 'Lot', 'Action Spike', 'Price Spike', 'Close Today', 'Selisih', 'Presentasi', 'Selisih Hari']])
     
     if st.button("Download Data"):
         output_folder = "dataHasilVolumeSpike"
