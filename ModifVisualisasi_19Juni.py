@@ -53,24 +53,43 @@ elif selected == 'Volume Spike (Visual)':
 
 elif selected == 'Volume Spike (Data)':
     # Function to plot stock data interactively
-    def plot_stock_interactive(data, symbol, volume_threshold, ema_period):
+    def plot_stock_interactive(data, symbol, volume_threshold, ema_period, smoothing_period, smoothing_type):
         fig = go.Figure()
 
         # Calculate EMA
         data['EMA'] = data['Close'].ewm(span=ema_period, adjust=False).mean()
 
+        # Calculate the smoothing line based on the selected type
+        if smoothing_type == "SMA":
+            data['Smoothing Line'] = data['EMA'].rolling(window=smoothing_period).mean()
+        elif smoothing_type == "EMA":
+            data['Smoothing Line'] = data['EMA'].ewm(span=smoothing_period, adjust=False).mean()
+        elif smoothing_type == "SMMA (RMA)":
+            data['Smoothing Line'] = data['EMA'].ewm(alpha=1/smoothing_period, adjust=False).mean()
+        elif smoothing_type == "WMA":
+            data['Smoothing Line'] = data['EMA'].rolling(window=smoothing_period).apply(lambda x: np.dot(x, range(1, smoothing_period+1))/sum(range(1, smoothing_period+1)))
+        elif smoothing_type == "VWMA":
+            data['Smoothing Line'] = (data['Volume']*data['EMA']).rolling(window=smoothing_period).sum()/data['Volume'].rolling(window=smoothing_period).sum()
+
         fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Close Price'))
         fig.add_trace(go.Scatter(x=data.index, y=data['Volume'], mode='lines', name='Volume', yaxis='y2'))
         
-        # Plot EMA with transparent white fill
+        # Plot EMA
         fig.add_trace(go.Scatter(
             x=data.index,
             y=data['EMA'],
             mode='lines',
             name=f'EMA {ema_period}',
-            line=dict(color='yellow'),
-            fill='tonexty',
-            fillcolor='rgba(235, 222, 52, 0.2)'  # White transparent fill
+            line=dict(color='blue')  # Blue color for EMA line
+        ))
+
+        # Plot Smoothing Line
+        fig.add_trace(go.Scatter(
+            x=data.index,
+            y=data['Smoothing Line'],
+            mode='lines',
+            name='Smoothing Line',
+            line=dict(color='#f37f20')  # Custom color for Smoothing Line
         ))
 
         average_volume = data['Volume'].mean()
@@ -123,6 +142,8 @@ elif selected == 'Volume Spike (Data)':
     interval = st.selectbox("Interval", ["10m", '30m', '1h', "1d", "1wk", "1mo"])
     volume_threshold = st.number_input("Volume Threshold", min_value=0)
     ema_period = st.number_input("EMA Period", min_value=1, value=20)  # Add input for EMA period
+    smoothing_period = st.number_input("Smoothing Period", min_value=1, value=5)  # Add input for Smoothing period
+    smoothing_type = st.selectbox("Smoothing Method", ["SMA", "EMA", "SMMA (RMA)", "WMA", "VWMA"])  # Add input for Smoothing type
 
     all_data = pd.DataFrame()
 
@@ -133,7 +154,7 @@ elif selected == 'Volume Spike (Data)':
         if not stock_data.empty:
             stock_data['Nama Saham'] = symbol
             stock_data['Date'] = stock_data.index  # Save the original date
-            plot_stock_interactive(stock_data, symbol, volume_threshold, ema_period)
+            plot_stock_interactive(stock_data, symbol, volume_threshold, ema_period, smoothing_period, smoothing_type)
             all_data = pd.concat([all_data, stock_data])
 
     all_data['Threshold'] = volume_threshold
