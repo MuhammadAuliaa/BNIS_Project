@@ -26,7 +26,7 @@ if selected == 'Bursa Efek Indonesia':
     )
     st.write("You selected:", ticker_symbol)
 
-    data_period = st.text_input("Period", "10d")
+    data_period = st.text_input("Period", "1d")
     data_interval = st.radio("Interval", ['5m', '15m', '30m', '1h', '1d', '5d'])
 
     st.header(ticker_symbol)
