@@ -12,26 +12,43 @@ def fetch_stocks(stock_universe):
         return stocks
 
 def apply_filter(stocks, feature, operator, value1, value2=None):
-        if operator == '>':
-            filtered_stocks = {ticker: info for ticker, info in stocks.items() if info.get(feature, 0) > value1}
-        elif operator == '<':
-            filtered_stocks = {ticker: info for ticker, info in stocks.items() if info.get(feature, 0) < value1}
-        elif operator == '>=':
-            filtered_stocks = {ticker: info for ticker, info in stocks.items() if info.get(feature, 0) >= value1}
-        elif operator == '<=':
-            filtered_stocks = {ticker: info for ticker, info in stocks.items() if info.get(feature, 0) <= value1}
-        elif operator == '=':
-            filtered_stocks = {ticker: info for ticker, info in stocks.items() if info.get(feature, 0) == value1}
-        elif operator == 'between':
-            filtered_stocks = {ticker: info for ticker, info in stocks.items() if value1 <= info.get(feature, 0) <= value2}
-        else:
-            filtered_stocks = stocks
-        return filtered_stocks
+    def get_numeric_value(value):
+        if isinstance(value, str) and value.endswith('%'):
+            return float(value.rstrip('%'))
+        return value
+
+    value1 = get_numeric_value(value1)
+    if value2 is not None:
+        value2 = get_numeric_value(value2)
+
+    if operator == '>':
+        filtered_stocks = {ticker: info for ticker, info in stocks.items() if get_numeric_value(info.get(feature, 0)) > value1}
+    elif operator == '<':
+        filtered_stocks = {ticker: info for ticker, info in stocks.items() if get_numeric_value(info.get(feature, 0)) < value1}
+    elif operator == '>=':
+        filtered_stocks = {ticker: info for ticker, info in stocks.items() if get_numeric_value(info.get(feature, 0)) >= value1}
+    elif operator == '<=':
+        filtered_stocks = {ticker: info for ticker, info in stocks.items() if get_numeric_value(info.get(feature, 0)) <= value1}
+    elif operator == '=':
+        filtered_stocks = {ticker: info for ticker, info in stocks.items() if get_numeric_value(info.get(feature, 0)) == value1}
+    elif operator == 'between':
+        filtered_stocks = {ticker: info for ticker, info in stocks.items() if value1 <= get_numeric_value(info.get(feature, 0)) <= value2}
+    else:
+        filtered_stocks = stocks
+    return filtered_stocks
 
 def calculate_high_to_close(info):
-    high = info.get('high', 0)
-    low = info.get('low', 0)
+    high = info.get('dayHigh', 0)
+    low = info.get('dayLow', 0)
     if high != 0:
         return ((high - low) / high) * 100
     else:
         return None  # Return None if high is zero to handle edge case
+
+def calculate_1_day_price_returns(info):
+    open_price = info.get('open', 0)
+    close_price = info.get('regularMarketPreviousClose', 0)
+    if open_price != 0:
+        return ((close_price - open_price) / open_price) * 100
+    else:
+        return None  # Return None if open price is zero to handle edge case
