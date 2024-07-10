@@ -6,4 +6,3 @@ pandas
 matplotlib
 yfinance
 plotly
-os
