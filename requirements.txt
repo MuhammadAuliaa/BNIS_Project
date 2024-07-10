@@ -1,8 +1,8 @@
 streamlit
-streamlit_option_menu 
+streamlit_option_menu
 datetime
-numpy 
-pandas 
+numpy
+pandas
 matplotlib
 yfinance
 plotly
